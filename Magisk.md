@@ -3,6 +3,10 @@
 Google Pixel 3a（G020H / sargo）の LineageOS 22.2 環境に Magisk で root を入れ、
 Termux から `sudo` を使えるようにした際の作業記録です。
 
+> 2026-11-24: ファクトリーリセットを実施した。Termux と Magisk アプリは削除されたが、
+> boot の Magisk パッチは残っていた。再セットアップの記録は
+> 「ファクトリーリセット後の再 root」を参照。
+
 ## 結果
 
 | 項目 | 内容 |
@@ -211,6 +215,53 @@ sudo su          # root シェル
 sudo <command>   # 単発コマンド
 ```
 
+## ファクトリーリセット後の再 root（2026-11-24）
+
+ファクトリーリセット後も、**boot の Magisk パッチと `magiskd` は残っていた**。
+`/data` が消えるため Termux・Magisk アプリ・Magisk の許可 DB は消えるが、
+root の仕組み自体は boot にあるため再 flash / 再パッチは不要だった。
+
+### 状態確認
+
+```bash
+adb devices
+adb shell 'getprop ro.lineage.version'   # 22.2-20261121-NIGHTLY-sargo
+adb shell 'ps -A | grep magiskd'          # magiskd が root で動作
+adb shell 'ls -l /debug_ramdisk/su'       # su が存在
+```
+
+起動直後は `/product/bin/su` がまだ見えないことがある。Magisk アプリが再起動を
+要求した場合は従う。
+
+### 再セットアップ
+
+1. ファクトリーリセットで USB デバッグがオフに戻るので、開発者向けオプションで再度有効化する。
+2. Magisk アプリを再インストールする。
+
+   ```bash
+   adb install -r ~/Downloads/lineage-sargo/Magisk-v31.1.apk
+   ```
+
+3. Magisk アプリ → **スーパーユーザー** → **+** → フィルタ（**システムアプリを表示**）
+   → `com.android.shell`（表示名「シェル」）を検索して許可する。
+4. 確認:
+
+   ```bash
+   adb shell su -c id
+   # uid=0(root) gid=0(root) groups=0(root) context=u:r:magisk:s0
+   ```
+
+今回の再構成では Termux / `sudo` は入れず、ADB シェル向けの root のみにした。
+
+- `com.android.shell` を許可すると、USB デバッグを許可した adb 接続元から root 操作ができる。
+  不要なら Magisk のスーパーユーザー画面で無効化する。
+- ファクトリーリセットで `/data` が消えるため、以前の Magisk 許可設定は消える。
+  root 自体は boot パッチなので残る。
+- boot を純正に戻した場合は root も消える。再 root は
+  `magisk_patched-31100.img` を再 flash するか、新しい `boot.img` をパッチする。
+- Termux と `sudo` が必要な場合は「5. Termux と sudo の導入」を再実行する
+  （`sudo` は 1.3.0 以降）。
+
 ## 注意 / 運用
 
 - LineageOS の OTA 更新で `boot` が上書きされ、Magisk は消える。
@@ -243,6 +294,9 @@ sudo <command>   # 単発コマンド
 | `/system/bin/su` が見つからない | v31.1 では `/debug_ramdisk/su` / `/product/bin/su` を使う。異常ではない |
 | `fastboot devices` が表示されない | USB の再接続、同じポート、USB 2.0 ポート / ハブを試す |
 | OTA 後に root が消えた | OTA が boot を上書きした。新 boot.img を再パッチして書き込む |
+| ファクトリーリセット後に root が消えたように見える | boot パッチは残る。Magisk アプリを再インストールし、`magiskd` と `/debug_ramdisk/su` を確認する |
+| `adb root` が `ADB Root access is disabled ...` | 開発者向けオプションの **Rooted debugging** を有効にする。shell から `service call adbroot_service` で変更することはできない（`Call must be system`） |
+| ファクトリーリセット後に Termux / sudo が消えた | `/data` が消えたため。必要なら Termux と `sudo` 1.3.0 を再導入する |
 
 ## 参考リンク
 
