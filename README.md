@@ -28,6 +28,7 @@ Google Pixel 3a（型番 **G020H**、日本向けモデル）に関する情報�
 - カスタム ROM / カーネル関連のメモ
 - 便利なコマンドやスクリプト
 - [LineageOS 22.2 インストール記録](LineageOS.md)
+- [Magisk による root 化と sudo の導入](Magisk.md)
 
 必要に応じて追記していきます。
 

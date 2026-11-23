@@ -162,6 +162,7 @@ Recovery で **Reboot system now** を選択。初回起動は最大 15 分程�
 - ワイヤレスデバッグ（Android 11 以降）を使う場合は、開発者向けオプションから有効化する。
 - ホストの udev ルールは USB ADB / fastboot を使い続けるなら残しておく。
 - ダウンロードしたファイル（約 1.6 GB）は、動作確認後に削除してよい。
+- root 化と `sudo` の導入は [Magisk.md](Magisk.md) を参照。
 
 ## 参考リンク
 
